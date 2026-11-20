@@ -1,30 +1,65 @@
-# Pokecup
+# Pokecup: passo a passo
 
-Site para torneios de Pokémon Showdown entre amigos. O site é estático (GitHub Pages) e os dados ficam no Supabase (gratuito).
+O site tem duas partes que trabalham juntas:
 
-## Configuração
+- **GitHub:** guarda e mostra as páginas do site (o arquivo `index.html`).
+- **Supabase:** guarda os dados (jogadores, campeonatos, partidas, apostas). É de graça.
 
-1. Crie um projeto em [supabase.com](https://supabase.com).
-2. Em **SQL Editor**, cole o conteúdo de `schema.sql` e clique em **Run**.
-3. Em **Authentication > Providers > Email**, desative **Confirm email** (assim seus amigos entram direto após criar a conta).
-4. Em **Project Settings > API**, copie a **Project URL** e a chave **anon public**.
-5. No início do `index.html`, substitua `SB_URL` e `SB_KEY` por esses dois valores. A chave anon é pública por design: quem protege os dados são as regras do `schema.sql`.
+Você já colocou o site no GitHub. Falta **ligar o site ao Supabase**. São 4 etapas.
 
-## Publicação no GitHub Pages
+## Etapa 1: criar o banco de dados no Supabase
 
-1. Crie um repositório no GitHub e envie `index.html`, `schema.sql` e `README.md`.
-2. Em **Settings > Pages**, escolha **Deploy from a branch**, branch `main`, pasta `/ (root)`.
-3. Em alguns minutos o site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
+1. Entre em [supabase.com](https://supabase.com), crie uma conta e clique em **New project**. Dê um nome (ex.: pokecup), crie uma senha qualquer e escolha a região mais próxima (South America, se tiver).
+2. Espere uns 2 minutos até o projeto ficar pronto.
+3. No menu da esquerda, clique em **SQL Editor** e depois em **New query**.
+4. Abra o arquivo `schema.sql`, copie **todo** o conteúdo, cole no editor e clique em **Run**. Deve aparecer "Success".
 
-## Regras implementadas
+## Etapa 2: deixar os amigos criarem conta direto
 
-- Qualquer pessoa logada cria campeonatos; o criador encerra as inscrições e registra os resultados.
-- Chaveamento: todos contra todos ou número fixo de rodadas. Com número ímpar de inscritos, as rodadas precisam ser múltiplo do número de inscritos (senão alguém jogaria menos).
-- Vitória vale 1 ponto, derrota 0. Empate no topo gera automaticamente uma partida de desempate pelo 1º lugar (se forem mais de 2 empatados, um todos contra todos entre eles, repetido até sobrar um).
-- Apostas: saldo inicial de 1000, apenas competidores do evento, apenas na rodada atual e nunca na própria partida. A odd é calculada pela taxa de vitórias de cada jogador em todos os eventos (com suavização para novatos) e fica fixa no momento da aposta. O pagamento é feito quando o criador registra o resultado.
-- A página **Vencedores** conta as Pokecups (campeonatos vencidos) de cada jogador.
+1. No menu da esquerda, vá em **Authentication** e procure a configuração do provedor **Email** (fica em *Providers* ou *Sign In / Providers*).
+2. Desligue a opção **Confirm email** e salve. Sem isso, cada amigo teria que confirmar o e-mail antes de entrar.
 
-## Limitações conhecidas
+## Etapa 3: copiar as duas chaves para o site
 
-- O limite de saldo nas apostas é checado só no site, não no banco. Para amigos funciona, mas não é à prova de quem editar o código no navegador.
-- Resultados registrados não podem ser corrigidos pelo site (só editando a tabela `matches` no painel do Supabase).
+1. No Supabase, clique no ícone de engrenagem (**Project Settings**) e depois em **API** (ou **API Keys**).
+2. Copie a **Project URL** (parece com `https://abcdefgh.supabase.co`).
+3. Copie a chave **anon** (um texto bem longo que começa com `eyJ`). Em versões novas do painel, ela fica na aba **Legacy API Keys**.
+4. No GitHub, abra seu repositório, clique no arquivo `index.html` e depois no ícone de **lápis** (Edit).
+5. Perto do começo do código, ache estas duas linhas e troque os textos entre aspas pelo que você copiou:
+
+```js
+const SB_URL = 'COLE_AQUI_A_URL', SB_KEY = 'COLE_AQUI_A_CHAVE_ANON';
+```
+
+   Fica assim (exemplo):
+
+```js
+const SB_URL = 'https://abcdefgh.supabase.co', SB_KEY = 'eyJhbGciOi...';
+```
+
+6. Clique em **Commit changes** (botão verde) e confirme.
+7. Espere 1 ou 2 minutos e abra o site apertando **Ctrl + F5** (no celular, feche e abra a aba). A tela de login deve aparecer.
+
+Pode colar essa chave sem medo: ela é feita para ficar pública. Quem protege os dados são as regras do `schema.sql`.
+
+## Etapa 4: usar
+
+1. Cada pessoa clica em **Criar conta** (nome, e-mail e senha) e depois em **Entrar**.
+2. Quem for organizar cria o campeonato; os outros se inscrevem; o criador encerra as inscrições, o chaveamento é gerado e ele registra os resultados.
+
+## Importar a 1ª PokeCup (opcional)
+
+Depois que os 5 jogadores criarem conta com os nomes certos, abra `importar_primeira_pokecup.sql`, troque o nome em `v_criador` (quem organizou), cole no **SQL Editor** e clique em **Run**. Rode só uma vez.
+
+## Regras do sistema
+
+- Vitória vale 1 ponto, derrota 0. Todos jogam a mesma quantidade de partidas.
+- Com número ímpar de inscritos e a opção de rodadas, o número de rodadas precisa ser múltiplo do número de inscritos.
+- Empate no topo gera automaticamente uma partida de desempate pelo 1º lugar.
+- Apostas: saldo inicial 1000, só para competidores do evento, na rodada atual e nunca na própria partida. As odds vêm do histórico de vitórias de cada jogador e ficam fixas na hora da aposta.
+
+## Se algo der errado
+
+- **Página em branco ou mensagem de erro:** confira se as duas chaves foram coladas inteiras, entre aspas, e se você apertou Ctrl + F5.
+- **"Row-level security" ou "permission denied":** o `schema.sql` não foi executado até o fim. Rode de novo num projeto novo.
+- **Limitações:** o limite de saldo nas apostas é checado só no site, e resultados já registrados só podem ser corrigidos pelo painel do Supabase.
