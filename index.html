@@ -40,10 +40,19 @@ tr.first td{background:color-mix(in srgb,var(--hl) 30%,transparent);font-weight:
 const SB_URL = 'https://nxtuppzmptbobmjiynor.supabase.co', SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54dHVwcHptcHRib2Jtaml5bm9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMDg5ODUsImV4cCI6MjExMDc4NDk4NX0.WnSBHti09i5I7QF3QV9eQACCtqWIwy-gT71JIOGl9hQ';
 const START_BALANCE = 1000, MARGIN = 0.95;
 
-let sb = null, initErr = '';
+// Deixa só o endereço base (https://xxxx.supabase.co), mesmo que tenham colado a URL com algo a mais
+function limpaUrl(u){
+  u = u.trim();
+  try {
+    const x = new URL(u), m = x.pathname.match(/\/project\/([a-z0-9]+)/);
+    if(/supabase\.com$/.test(x.hostname) && m) return 'https://' + m[1] + '.supabase.co';
+    return x.origin;
+  } catch(e){ return u; }
+}
+let sb = null, initErr = '', perfilErr = '', carregado = false;
 try {
   if(SB_URL.startsWith('COLE') || SB_KEY.startsWith('COLE')) throw new Error('as chaves ainda não foram preenchidas');
-  sb = supabase.createClient(SB_URL, SB_KEY);
+  sb = supabase.createClient(limpaUrl(SB_URL), SB_KEY.trim());
 } catch(e){ initErr = String(e.message || e); }
 const $ = s => document.querySelector(s);
 const h = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -222,7 +231,9 @@ function evView(id){
 function render(){
   const r = location.hash || '#/', a = $('#app');
   $('#hd').innerHTML = `<a class=logo href="#/"><i></i>Pokecup</a><a href="#/">Campeonatos</a><a href="#/wins">Vencedores</a><span class=sp></span>` +
-    (me ? `<span>${h(nm(me.id))}, saldo ${avail(me.id)}</span><button class=g onclick="logout()">Sair</button>` : '');
+    (me ? (D.players.some(p => p.id === me.id) ? `<span>${h(nm(me.id))}, saldo ${avail(me.id)}</span>` :
+      carregado ? `<span class=m>Seu perfil de jogador não foi criado${perfilErr ? ': ' + h(perfilErr) : ''}</span>` : '') +
+     `<button class=g onclick="logout()">Sair</button>` : '');
   if(!sb) return a.innerHTML = `<div class=c><h3>Falta configurar o banco de dados</h3>
     <p>O site já está no ar, mas ainda não está conectado ao Supabase. No arquivo <b>index.html</b>, perto do começo do código, troque:</p>
     <p><code>COLE_AQUI_A_URL</code> pela <b>Project URL</b> do seu projeto Supabase<br><code>COLE_AQUI_A_CHAVE_ANON</code> pela chave <b>anon</b> (começa com eyJ)</p>
@@ -239,8 +250,13 @@ if(sb){
     // adiado de propósito: consultar o banco dentro deste aviso travaria o Supabase
     setTimeout(async () => {
       try {
-        if(me) await sb.from('players').upsert({id:me.id, name:me.user_metadata.name || me.email.split('@')[0]}, {ignoreDuplicates:true});
-        await load();
+        if(me){
+          let nome = (me.user_metadata.name || me.email.split('@')[0]).trim().slice(0, 24);
+          if(nome.length < 2) nome += '_';
+          const r = await sb.from('players').upsert({id:me.id, name:nome}, {ignoreDuplicates:true});
+          perfilErr = r.error ? r.error.message : '';
+        }
+        await load(); carregado = true;
       } catch(e){ console.error(e); }
       render();
     }, 0);
