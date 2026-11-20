@@ -37,12 +37,17 @@ tr.first td{background:color-mix(in srgb,var(--hl) 30%,transparent);font-weight:
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // 1) Cole aqui a URL e a chave "anon" do seu projeto Supabase (Project Settings > API)
-const SB_URL = 'https://nxtuppzmptbobmjiynor.supabase.co/rest/v1/', SB_KEY = 'sb_publishable_NhSUEXa7UPDxJGvD_KlGug_vr7kbYhK';
+const SB_URL = 'COLE_AQUI_A_URL', SB_KEY = 'COLE_AQUI_A_CHAVE_ANON';
 const START_BALANCE = 1000, MARGIN = 0.95;
 
-const sb = supabase.createClient(SB_URL, SB_KEY);
+let sb = null, initErr = '';
+try {
+  if(SB_URL.startsWith('COLE') || SB_KEY.startsWith('COLE')) throw new Error('as chaves ainda não foram preenchidas');
+  sb = supabase.createClient(SB_URL, SB_KEY);
+} catch(e){ initErr = String(e.message || e); }
 const $ = s => document.querySelector(s);
 const h = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+addEventListener('error', ev => { $('#app').innerHTML = '<div class=c><b>Ocorreu um erro:</b> ' + h(ev.message) + '</div>'; });
 const ST = {open:'Inscrições abertas', running:'Em andamento', finished:'Encerrado'};
 let me = null, D = {players:[],events:[],entries:[],matches:[],bets:[]};
 
@@ -218,17 +223,22 @@ function render(){
   const r = location.hash || '#/', a = $('#app');
   $('#hd').innerHTML = `<a class=logo href="#/"><i></i>Pokecup</a><a href="#/">Campeonatos</a><a href="#/wins">Vencedores</a><span class=sp></span>` +
     (me ? `<span>${h(nm(me.id))}, saldo ${avail(me.id)}</span><button class=g onclick="logout()">Sair</button>` : '');
-  if(SB_URL.startsWith('COLE')) return a.innerHTML = '<div class=c>Configure SB_URL e SB_KEY no início do index.html (veja o README).</div>';
+  if(!sb) return a.innerHTML = `<div class=c><h3>Falta configurar o banco de dados</h3>
+    <p>O site já está no ar, mas ainda não está conectado ao Supabase. No arquivo <b>index.html</b>, perto do começo do código, troque:</p>
+    <p><code>COLE_AQUI_A_URL</code> pela <b>Project URL</b> do seu projeto Supabase<br><code>COLE_AQUI_A_CHAVE_ANON</code> pela chave <b>anon</b> (começa com eyJ)</p>
+    <p class=m>Passo a passo completo no README.${initErr ? ' Detalhe técnico: ' + h(initErr) : ''}</p></div>`;
   a.innerHTML = (me ? '' : authCard()) + (r.startsWith('#/e/') ? evView(r.slice(4)) : r === '#/wins' ? winsView() : homeView());
 }
 
 window.onhashchange = render;
-sb.auth.onAuthStateChange(async (_, s) => {
-  me = s?.user || null;
-  if(me) await sb.from('players').upsert({id:me.id, name:me.user_metadata.name || me.email.split('@')[0]}, {ignoreDuplicates:true});
-  await load(); render();
-});
-setInterval(() => { if(document.activeElement.tagName !== 'INPUT') refresh(); }, 15000);
+if(sb){
+  sb.auth.onAuthStateChange(async (_, s) => {
+    me = s?.user || null;
+    if(me) await sb.from('players').upsert({id:me.id, name:me.user_metadata.name || me.email.split('@')[0]}, {ignoreDuplicates:true});
+    await load(); render();
+  });
+  setInterval(() => { if(document.activeElement.tagName !== 'INPUT') refresh(); }, 15000);
+} else render();
 </script>
 </body>
 </html>
