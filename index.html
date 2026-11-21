@@ -33,6 +33,9 @@ th{color:var(--mut);font-weight:600;font-size:13px}
 tr.first td{background:color-mix(in srgb,var(--hl) 30%,transparent);font-weight:800}
 .m{color:var(--mut);font-size:13px}
 .t{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--bd)}
+.t.open{background:#ffc824;color:#3b2a00}
+.t.running{background:#1f5fd1;color:#fff}
+.t.finished{background:#17874a;color:#fff}
 .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
 .w{color:var(--ok);font-weight:800}
 .cn{display:inline-flex;align-items:center;gap:5px;font-weight:800;padding:3px 12px 3px 6px;border-radius:99px;background:color-mix(in srgb,var(--hl) 28%,transparent)}
@@ -187,7 +190,7 @@ function homeView(){
     <select id=emo onchange="$('#er').hidden=this.value!=='rounds'"><option value=roundrobin>Todos contra todos</option><option value=rounds>Número de rodadas</option></select>
     <input id=er type=number min=1 placeholder="Rodadas" hidden style="width:100px"><button onclick="createEv()">Criar campeonato</button></div></div>` : '';
   const list = D.events.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).map(e => `<div class=c>
-    <a href="#/e/${e.id}"><b>${h(e.name)}</b></a> <span class=t>${ST[e.status]}</span>
+    <a href="#/e/${e.id}"><b>${h(e.name)}</b></a> <span class="t ${e.status}">${ST[e.status]}</span>
     <div class=m>Criado por ${h(nm(e.creator))}, ${e.mode === 'rounds' ? e.rounds + ' rodadas' : 'todos contra todos'}, ${D.entries.filter(x => x.event_id === e.id).length} inscritos${e.champion ? ', campeão: ' + h(nm(e.champion)) : ''}</div></div>`).join('');
   return form + '<h2>Campeonatos</h2>' + (list || '<p class=m>Nenhum campeonato ainda. Crie o primeiro acima.</p>');
 }
@@ -215,7 +218,7 @@ function evView(id){
   const ev = D.events.find(e => e.id === id);
   if(!ev) return '<p>Campeonato não encontrado. <a href="#/">Voltar</a></p>';
   const isC = me && me.id === ev.creator, en = D.entries.filter(e => e.event_id === id).map(e => e.player_id), joined = me && en.includes(me.id);
-  let s = `<p><a href="#/">Voltar aos campeonatos</a></p><h2>${h(ev.name)} <span class=t>${ST[ev.status]}</span></h2>
+  let s = `<p><a href="#/">Voltar aos campeonatos</a></p><h2>${h(ev.name)} <span class="t ${ev.status}">${ST[ev.status]}</span>
     <p class=m>Criado por ${h(nm(ev.creator))}, ${ev.mode === 'rounds' ? ev.rounds + ' rodadas' : 'todos contra todos'}</p>`;
   if(ev.champion) s += `<div class="c camp">🏆 Campeão: <b>${h(nm(ev.champion))}</b></div>`;
   if(ev.status === 'open'){
