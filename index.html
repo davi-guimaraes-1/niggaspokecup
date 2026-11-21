@@ -252,7 +252,7 @@ function evView(id){
 function render(){
   const r = location.hash || '#/', a = $('#app');
   document.title = NOME_SITE;
-  const nav = [['#/','Campeonatos'],['#/wins','Vencedores'],['#/coins','Moedas']].map(([l,t]) =>
+  const nav = [['#/','Campeonatos'],['#/wins','Vencedores'],['#/coins','NiggaBets']].map(([l,t]) =>
     `<a href="${l}" class="${r === l || (l === '#/' && r.startsWith('#/e/')) ? 'on' : ''}">${t}</a>`).join('');
   $('#hd').innerHTML = `<a class=logo href="#/"><i></i>${h(NOME_SITE)}</a>${nav}<span class=sp></span>` +
     (me ? (D.players.some(p => p.id === me.id) ? `<span>${h(nm(me.id))}</span><span class=cn title="Saldo disponível">${coin(18)} ${avail(me.id)}</span>` :
