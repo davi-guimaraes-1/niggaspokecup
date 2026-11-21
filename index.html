@@ -226,10 +226,10 @@ function evView(id){
   }
   const ms = D.matches.filter(m => m.event_id === id).sort((a,b) => a.round - b.round);
   const reg = ms.filter(m => !m.is_tiebreak);
-  const tab = en.map(p => ({p, pts:reg.filter(m => m.winner === p).length, j:reg.filter(m => m.winner && (m.p1 === p || m.p2 === p)).length}))
+  const tab = en.map(p => ({p, pts:ms.filter(m => m.winner === p).length, d:ms.filter(m => m.is_tiebreak && m.winner === p).length, j:ms.filter(m => m.winner && (m.p1 === p || m.p2 === p)).length}))
     .sort((a,b) => b.pts - a.pts || nm(a.p).localeCompare(nm(b.p)));
   s += `<div class=c><h3>Classificação</h3><table><tr><th>#</th><th>Jogador</th><th>Pontos</th><th>Jogos</th></tr>${
-    tab.map((x,i) => `<tr class="${i === 0 && x.pts ? 'first' : ''}"><td>${i + 1}</td><td>${h(nm(x.p))}</td><td>${x.pts}</td><td>${x.j}</td></tr>`).join('')}</table></div>`;
+    tab.map((x,i) => `<tr class="${i === 0 && x.pts ? 'first' : ''}"><td>${i + 1}</td><td>${h(nm(x.p))}</td><td>${x.pts}${x.d ? ` <span class=m>(${x.d} no desempate)</span>` : ''}</td><td>${x.j}</td></tr>`).join('')}</table></div>`;
   const pend = ms.filter(m => !m.winner), cur = pend.length ? Math.min(...pend.map(m => m.round)) : 0;
   if(pend.some(m => m.is_tiebreak)) s += `<div class=c><b>Empate no topo.</b> Há uma partida de desempate pelo 1º lugar.</div>`;
   const rounds = [...new Set(ms.map(m => m.round))];
