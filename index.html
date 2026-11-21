@@ -218,7 +218,7 @@ function evView(id){
   const ev = D.events.find(e => e.id === id);
   if(!ev) return '<p>Campeonato não encontrado. <a href="#/">Voltar</a></p>';
   const isC = me && me.id === ev.creator, en = D.entries.filter(e => e.event_id === id).map(e => e.player_id), joined = me && en.includes(me.id);
-  let s = `<p><a href="#/">Voltar aos campeonatos</a></p><h2>${h(ev.name)} <span class="t ${ev.status}">${ST[ev.status]}</span>
+  let s = `<p><a href="#/">Voltar aos campeonatos</a></p><h2>${h(ev.name)} <span class="t ${ev.status}">${ST[ev.status]}</span></h2>
     <p class=m>Criado por ${h(nm(ev.creator))}, ${ev.mode === 'rounds' ? ev.rounds + ' rodadas' : 'todos contra todos'}</p>`;
   if(ev.champion) s += `<div class="c camp">🏆 Campeão: <b>${h(nm(ev.champion))}</b></div>`;
   if(ev.status === 'open'){
